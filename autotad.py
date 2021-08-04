@@ -15,7 +15,6 @@ def getADTfilename(Files):
     Files.adt_filename = Files.dotc_filename.replace(".c",".h")
     return Files
 
-
 """ Writes header in file """ 
 def writeHeader(Files, ADTFile):
 
@@ -48,6 +47,9 @@ def ADTFromScratch(Files, DotcFile, ADTFile):
 
     for line in content:
 
+        if "//PRIVATE" in line:
+            curly_braces_control = -1
+
         if '{' in line:
 
             if curly_braces_control == 0:
@@ -56,8 +58,7 @@ def ADTFromScratch(Files, DotcFile, ADTFile):
                 #  clean the struct writer section
                 if "struct" in line:
                     i = 0
-                    line = line.replace("{", " ")
-                    line = line.split(" ")
+                    line = line.replace("{", " ").split(" ")
 
                     for i in range(len(line)):
                         if line[i] == "struct":
@@ -74,7 +75,7 @@ def ADTFromScratch(Files, DotcFile, ADTFile):
             curly_braces_control += 1
 
         if '}' in line:
-            curly_braces_control -= 1
+            curly_braces_control -= 1 if curly_braces_control > 0 else 0
 
     writeFooter(ADTFile)
 
