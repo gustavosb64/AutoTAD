@@ -1,3 +1,4 @@
+import sys
 from os.path import exists
 
 """ Class containing used files names """
@@ -80,9 +81,16 @@ def ADTFromScratch(Files, DotcFile, ADTFile):
     return
     
 def main():
+
     Files = ClassFiles()
 
-    Files.dotc_filename = str(input())
+    """ Gets dotc_filename from argv if it exists; otherwise, asks for input from stdin """
+    if (len(sys.argv) > 1):
+        Files.dotc_filename = sys.argv[1]
+    else:
+        Files.dotc_filename = str(input())
+
+
     getADTfilename(Files)
 
     """ Opening files """
