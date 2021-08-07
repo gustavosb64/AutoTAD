@@ -2,28 +2,77 @@ import sys
 from os.path import exists
 
 """ Class containing used files names """
-class ClassFiles:
+class ClassFileNames:
     dotc_filename = ""
     adt_filename = ""
 
-""" Gets the ADT file name """
-def getADTfilename(Files):
+""" Gets the used files names """
+def getFilesNames(FilesNames):
 
-    if ".c" not in Files.dotc_filename:
-        Files.dotc_filename += ".c"
+    if ".c" not in FilesNames.dotc_filename:
+        FilesNames.dotc_filename += ".c"
 
-    Files.adt_filename = Files.dotc_filename.replace(".c",".h")
-    return Files
+    FilesNames.adt_filename = FilesNames.dotc_filename.replace(".c",".h")
+
+    return FilesNames
+
+""" Adapt line to be written in the ADT file """
+def adaptLine(line):
+
+    #Structs are defined by typedef and named by their original name capitalized
+    if "struct" in line:
+        line = line.replace("{", " ").split(" ")
+        struct_name = line[line.index("struct") + 1]
+
+        line = "typedef " + struct_name + " " + struct_name.capitalize() + ";\n"
+    else:
+        line = line.replace('{',';')
+
+    return line
 
 """ Writes header in file """ 
-def writeHeader(Files, ADTFile):
+def writeHeader(FilesNames, ADTFile):
 
     #prepares ADTFile name for writing
-    header_filename = Files.adt_filename.upper().replace('.','_')
+    header_filename = FilesNames.adt_filename.upper().replace('.','_')
 
     str_header = "#ifndef " + header_filename + "\n#define " + header_filename + "\n"
 
     ADTFile.write(str_header)
+
+    return
+
+def writeContents(DotcFile, ADTFile, dict_functions_comments = {}):
+
+    #curly_braces_control makes the scope control to identify functions
+    curly_braces_control = 0
+
+    dotc_contents = DotcFile.readlines()
+    for line in dotc_contents:
+
+        #If "//AUTOTAD_PRIVATE" is in line, curly_braces_control is changed so the next function will be ignored by the script 
+        if "//AUTOTAD_PRIVATE" in line and curly_braces_control == 0:
+            curly_braces_control = -1 
+
+        elif '{' in line:
+
+            if curly_braces_control == 0:
+
+                line = adaptLine(line)
+
+                #If line already existed in a previous file, it's original comment is kept in the new one
+                if line in dict_functions_comments:
+                    str_comment_section = "\n" + dict_functions_comments[line]
+                else:
+                    str_comment_section = "\n/*\n * Comment section\n*/\n"
+
+                ADTFile.write(str_comment_section)
+                ADTFile.write(line)
+
+            curly_braces_control += 1
+
+        if '}' in line:
+            curly_braces_control -= 1 if curly_braces_control > 0 else 0
 
     return
 
@@ -34,63 +83,27 @@ def writeFooter(ADTFile):
 
     return
 
-""" Writes ADT file from scratch """ 
-def ADTFromScratch(Files, DotcFile, ADTFile):
+""" Writes new ADT file from scratch """ 
+def writeNewADT(FilesNames, dict_functions_comments = {}):
 
-    writeHeader(Files, ADTFile)
+    """ Opening files """
+    DotcFile = open (FilesNames.dotc_filename, "r")
+    ADTFile = open (FilesNames.adt_filename, "w")  
 
-    contents = DotcFile.readlines()
-    str_comment_section = "\n/*\n * Comment section\n*/\n"
-
-    #Makes the scope control, therefore only functions names are written in ADTFile
-    curly_braces_control = 0
-
-    for line in contents:
-
-        #If "//PRIVATE_AUTOTAD" is in line, curly_braces_control is changed
-        #  so the next read function will be ignored by the script
-        if "//PRIVATE_AUTOTAD" in line:
-            curly_braces_control = -1
-
-        if '{' in line:
-
-            if curly_braces_control == 0:
-
-                #TODO:
-                #  clean the struct writer section
-                if "struct" in line:
-                    i = 0
-                    line = line.replace("{", " ").split(" ")
-
-                    for i in range(len(line)):
-                        if line[i] == "struct":
-                            aux_string = "typedef "+line[i+1]
-                            line[i+1] = line[i+1].capitalize()
-                            line = aux_string + " " + line[i+1] + ";\n"
-                            break;
-                else:
-                    line = line.replace('{',';')
-
-                ADTFile.write(str_comment_section)
-                ADTFile.write(line)
-
-            curly_braces_control += 1
-
-        if '}' in line:
-            curly_braces_control -= 1 if curly_braces_control > 0 else 0
-
+    writeHeader(FilesNames, ADTFile)
+    writeContents(DotcFile, ADTFile, dict_functions_comments)
     writeFooter(ADTFile)
 
+    DotcFile.close()
+    ADTFile.close()
+
     return
-    
-#TODO:
-#  clean ADTFromExistentFile
-#  modularize writing section
+
 """ Writes ADT file from existent file """ 
-def ADTFromExistentFile(Files, DotcFile, ADTFile):
+def ADTFromExistentFile(FilesNames, ADTFile):
 
+    """ First, the existent .h file is read and the functions' comments are stored in a dictionary """
     adt_contents = ADTFile.readlines()
-
     dict_functions_comments = {}
 
     comment = ""
@@ -105,114 +118,35 @@ def ADTFromExistentFile(Files, DotcFile, ADTFile):
             comment += line
             comment_scope = False
 
-        elif comment_scope:
+        elif comment_scope == True:
             comment += line
 
         else:
             dict_functions_comments[line] = comment
             comment = ""
 
-    ADTFile = open(Files.adt_filename, 'w')
+    """ Then, the previous file is overwritten by the new version, keeping the original comments """
+    writeNewADT(FilesNames, dict_functions_comments)
 
-    writeHeader(Files, ADTFile)
-
-    curly_braces_control = 0
-    dotc_contents = DotcFile.readlines()
-
-    for line in dotc_contents:
-
-        #If "//PRIVATE_AUTOTAD" is in line, curly_braces_control is changed
-        #  so the next read function will be ignored by the script
-        if "//PRIVATE_AUTOTAD" in line:
-            curly_braces_control = -1
-
-        if '{' in line:
-
-            if curly_braces_control == 0:
-
-                #TODO:
-                #  clean the struct writer section
-                if "struct" in line:
-                    i = 0
-                    line = line.replace("{", " ").split(" ")
-
-                    for i in range(len(line)):
-                        if line[i] == "struct":
-                            aux_string = "typedef "+line[i+1]
-                            line[i+1] = line[i+1].capitalize()
-                            line = aux_string + " " + line[i+1] + ";\n"
-                            break;
-                else:
-                    line = line.replace('{',';')
-
-                if line in dict_functions_comments:
-                    str_comment_section = "\n" + dict_functions_comments[line]
-                else:
-                    str_comment_section = "\n/*\n * Comment section\n*/\n"
-
-                ADTFile.write(str_comment_section)
-                ADTFile.write(line)
-
-            curly_braces_control += 1
-
-        if '}' in line:
-            curly_braces_control -= 1 if curly_braces_control > 0 else 0
-
-    writeFooter(ADTFile)
+    return
 
 def main():
 
-    Files = ClassFiles()
+    FilesNames = ClassFileNames()
 
     """ Gets dotc_filename from argv if it exists; otherwise, asks for input from stdin """
     if (len(sys.argv) > 1):
-        Files.dotc_filename = sys.argv[1]
+        FilesNames.dotc_filename = sys.argv[1]
     else:
-        Files.dotc_filename = str(input())
+        FilesNames.dotc_filename = str(input())
 
-    getADTfilename(Files)
+    FilesNames = getFilesNames(FilesNames)
 
-    """ Opening files """
-    DotcFile = open (Files.dotc_filename, "r")
-
+    """ If the file adt_filename already exists, the new one is created based on it """
     try:
-        ADTFile = open (Files.adt_filename, "x")  
-        ADTFile = open (Files.adt_filename, "w")  
-
-        ADTFromScratch(Files, DotcFile, ADTFile)
+        with open(FilesNames.adt_filename, "r") as ADTFile:
+            ADTFromExistentFile(FilesNames, ADTFile)
     except:
-        ADTFile = open (Files.adt_filename, "r")  
-
-        ADTFromExistentFile(Files, DotcFile, ADTFile)
-
-
-
-                
-    DotcFile.close()
-    ADTFile.close()
+        writeNewADT(FilesNames)
 
 main()
-
-"""
-    Script for getting rid of all commentaries
-
-    comment = ""
-    comment_scope = False 
-    for line in contents:
-        
-        if "/*" in line:
-            comment_scope = True
-            comment += line
-
-        elif "*/" in line:
-            comment += line
-            comment_scope = False
-            comment = ""
-
-        elif comment_scope:
-            comment += line
-
-        else:
-            ADTFile.write(comment)
-            ADTFile.write(line)
-"""
