@@ -16,7 +16,7 @@ def getFilesNames(FilesNames):
 
     return FilesNames
 
-""" Adapt line to be written in the ADT file """
+""" Adapt line to be written in ADT file """
 def adaptLine(line):
 
     #Structs are defined by typedef and named by their original name capitalized
@@ -42,7 +42,13 @@ def writeHeader(FilesNames, ADTFile):
 
     return
 
-def writeContents(DotcFile, ADTFile, dict_functions_comments = {}):
+""" Writes the contents in file """
+def writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments = {}):
+
+    if comment_off == True:
+        default_comment = "\n"
+    else:
+        default_comment = "\n/*\n * Comment section\n*/\n"
 
     #curly_braces_control makes the scope control to identify functions
     curly_braces_control = 0
@@ -64,7 +70,7 @@ def writeContents(DotcFile, ADTFile, dict_functions_comments = {}):
                 if line in dict_functions_comments:
                     str_comment_section = "\n" + dict_functions_comments[line]
                 else:
-                    str_comment_section = "\n/*\n * Comment section\n*/\n"
+                    str_comment_section = default_comment 
 
                 ADTFile.write(str_comment_section)
                 ADTFile.write(line)
@@ -84,14 +90,14 @@ def writeFooter(ADTFile):
     return
 
 """ Writes new ADT file from scratch """ 
-def writeNewADT(FilesNames, dict_functions_comments = {}):
+def writeNewADT(FilesNames, comment_off, dict_functions_comments = {}):
 
     """ Opening files """
     DotcFile = open (FilesNames.dotc_filename, "r")
     ADTFile = open (FilesNames.adt_filename, "w")  
 
     writeHeader(FilesNames, ADTFile)
-    writeContents(DotcFile, ADTFile, dict_functions_comments)
+    writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments)
     writeFooter(ADTFile)
 
     DotcFile.close()
@@ -100,7 +106,7 @@ def writeNewADT(FilesNames, dict_functions_comments = {}):
     return
 
 """ Writes ADT file from existent file """ 
-def ADTFromExistentFile(FilesNames, ADTFile):
+def ADTFromExistentFile(FilesNames, ADTFile, comment_off):
 
     """ First, the existent .h file is read and the functions' comments are stored in a dictionary """
     adt_contents = ADTFile.readlines()
@@ -114,7 +120,7 @@ def ADTFromExistentFile(FilesNames, ADTFile):
             comment_scope = True
             comment += line
 
-        elif "*/" in line:
+        elif "*/" in line or ("//" in line and comment_scope == False):
             comment += line
             comment_scope = False
 
@@ -126,18 +132,29 @@ def ADTFromExistentFile(FilesNames, ADTFile):
             comment = ""
 
     """ Then, the previous file is overwritten by the new version, keeping the original comments """
-    writeNewADT(FilesNames, dict_functions_comments)
+    writeNewADT(FilesNames, comment_off, dict_functions_comments)
 
     return
 
 def main():
 
     FilesNames = ClassFileNames()
+    comment_off = False
 
-    """ Gets dotc_filename from argv if it exists; otherwise, asks for input from stdin """
-    if (len(sys.argv) > 1):
-        FilesNames.dotc_filename = sys.argv[1]
-    else:
+    """ Checks input from sys.argv """
+    for i in range(1, len(sys.argv)):
+    
+        if sys.argv[i] == "comment-off":
+            comment_off = True
+
+        elif FilesNames.dotc_filename == "": 
+            FilesNames.dotc_filename = sys.argv[i]
+
+        else:
+            raise Exception(sys.argv[i] + " is not a valid command. Given filename: " + FilesNames.dotc_filename)
+
+    """ If dotc_filename is not given via sys.argv, asks for input from stdin """
+    if FilesNames.dotc_filename == "":
         FilesNames.dotc_filename = str(input())
 
     FilesNames = getFilesNames(FilesNames)
@@ -145,8 +162,8 @@ def main():
     """ If the file adt_filename already exists, the new one is created based on it """
     try:
         with open(FilesNames.adt_filename, "r") as ADTFile:
-            ADTFromExistentFile(FilesNames, ADTFile)
+            ADTFromExistentFile(FilesNames, ADTFile, comment_off)
     except:
-        writeNewADT(FilesNames)
+        writeNewADT(FilesNames, comment_off)
 
 main()
