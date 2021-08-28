@@ -46,7 +46,7 @@ def writeHeader(FilesNames, ADTFile):
 def writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments = {}, typedef_list = []):
 
     if comment_off == True:
-        default_comment = ""
+        default_comment = "\n"
     else:
         default_comment = "\n\n/*\n * Comment section\n*/\n"
 
@@ -60,8 +60,8 @@ def writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments = {}, 
     dotc_contents = DotcFile.readlines()
     for line in dotc_contents:
 
-        #If "//AUTOTAD_PRIVATE" is in line, curly_braces_control is changed so the next function will be ignored by the script 
-        if "//AUTOTAD_PRIVATE" in line and curly_braces_control == 0:
+        #If "AUTOTAD_PRIVATE" is in line, curly_braces_control is changed so the next function will be ignored by the script 
+        if "AUTOTAD_PRIVATE" in line and curly_braces_control == 0:
             curly_braces_control = -1 
 
         elif '{' in line:
@@ -121,7 +121,7 @@ def ADTFromExistentFile(FilesNames, ADTFile, comment_off):
     comment_scope = False 
     for line in adt_contents:
         
-        if "/*" in line:
+        if "/*" in line and "*/" not in line:
             comment_scope = True
             comment += line
 
