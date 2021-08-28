@@ -24,7 +24,7 @@ def adaptLine(line):
         line = line.replace("{", " ").split(" ")
         struct_name = line[line.index("struct") + 1]
 
-        line = "typedef " + struct_name + " " + struct_name.capitalize() + ";\n"
+        line = "typedef struct " + struct_name + " " + struct_name.capitalize() + ";\n"
     else:
         line = line.replace('{',';')
 
@@ -36,19 +36,23 @@ def writeHeader(FilesNames, ADTFile):
     #prepares ADTFile name for writing
     header_filename = FilesNames.adt_filename.upper().replace('.','_')
 
-    str_header = "#ifndef " + header_filename + "\n#define " + header_filename + "\n"
+    str_header = "#ifndef " + header_filename + "\n#define " + header_filename + "\n\n"
 
     ADTFile.write(str_header)
 
     return
 
 """ Writes the contents in file """
-def writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments = {}):
+def writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments = {}, typedef_list = []):
 
     if comment_off == True:
-        default_comment = "\n"
+        default_comment = ""
     else:
-        default_comment = "\n/*\n * Comment section\n*/\n"
+        default_comment = "\n\n/*\n * Comment section\n*/\n"
+
+    for line in typedef_list:
+        ADTFile.write("\n" + dict_functions_comments[line])
+        ADTFile.write(line)
 
     #curly_braces_control makes the scope control to identify functions
     curly_braces_control = 0
@@ -85,19 +89,19 @@ def writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments = {}):
 """ Writes footer in file """ 
 def writeFooter(ADTFile):
 
-    ADTFile.write("\n#endif")
+    ADTFile.write("\n\n#endif")
 
     return
 
 """ Writes new ADT file from scratch """ 
-def writeNewADT(FilesNames, comment_off, dict_functions_comments = {}):
+def writeNewADT(FilesNames, comment_off, dict_functions_comments = {}, typedef_list = []):
 
     """ Opening files """
     DotcFile = open (FilesNames.dotc_filename, "r")
     ADTFile = open (FilesNames.adt_filename, "w")  
 
     writeHeader(FilesNames, ADTFile)
-    writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments)
+    writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments, typedef_list)
     writeFooter(ADTFile)
 
     DotcFile.close()
@@ -111,6 +115,7 @@ def ADTFromExistentFile(FilesNames, ADTFile, comment_off):
     """ First, the existent .h file is read and the functions' comments are stored in a dictionary """
     adt_contents = ADTFile.readlines()
     dict_functions_comments = {}
+    typedef_list = []
 
     comment = ""
     comment_scope = False 
@@ -127,12 +132,17 @@ def ADTFromExistentFile(FilesNames, ADTFile, comment_off):
         elif comment_scope == True:
             comment += line
 
+        elif comment_scope == False and "typedef" in line and "struct" not in line:
+            dict_functions_comments[line] = comment
+            typedef_list.append(line)
+            comment = ""
+
         else:
             dict_functions_comments[line] = comment
             comment = ""
 
     """ Then, the previous file is overwritten by the new version, keeping the original comments """
-    writeNewADT(FilesNames, comment_off, dict_functions_comments)
+    writeNewADT(FilesNames, comment_off, dict_functions_comments, typedef_list)
 
     return
 
