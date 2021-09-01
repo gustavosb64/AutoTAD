@@ -48,7 +48,7 @@ def writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments = {}, 
     if comment_off == True:
         default_comment = "\n"
     else:
-        default_comment = "\n\n/*\n * Comment section\n*/\n"
+        default_comment = "\n/*\n * Comment section\n*/\n"
 
     for line in typedef_list:
         ADTFile.write("\n" + dict_functions_comments[line])
@@ -146,34 +146,31 @@ def ADTFromExistentFile(FilesNames, ADTFile, comment_off):
 
     return
 
-def main():
 
-    FilesNames = ClassFileNames()
-    comment_off = False
+FilesNames = ClassFileNames()
+comment_off = False
 
-    """ Checks input from sys.argv """
-    for i in range(1, len(sys.argv)):
-    
-        if sys.argv[i] == "comment-off":
-            comment_off = True
+""" Checks input from sys.argv """
+for i in range(1, len(sys.argv)):
 
-        elif FilesNames.dotc_filename == "": 
-            FilesNames.dotc_filename = sys.argv[i]
+    if sys.argv[i] == "comment-off":
+        comment_off = True
 
-        else:
-            raise Exception(sys.argv[i] + " is not a valid command. Given filename: " + FilesNames.dotc_filename)
+    elif FilesNames.dotc_filename == "": 
+        FilesNames.dotc_filename = sys.argv[i]
 
-    """ If dotc_filename is not given via sys.argv, asks for input from stdin """
-    if FilesNames.dotc_filename == "":
-        FilesNames.dotc_filename = str(input())
+    else:
+        raise Exception(sys.argv[i] + " is not a valid command. Given filename: " + FilesNames.dotc_filename)
 
-    FilesNames = getFilesNames(FilesNames)
+""" If dotc_filename is not given via sys.argv, asks for input from stdin """
+if FilesNames.dotc_filename == "":
+    FilesNames.dotc_filename = str(input())
 
-    """ If the file adt_filename already exists, the new one is created based on it """
-    try:
-        with open(FilesNames.adt_filename, "r") as ADTFile:
-            ADTFromExistentFile(FilesNames, ADTFile, comment_off)
-    except:
-        writeNewADT(FilesNames, comment_off)
+FilesNames = getFilesNames(FilesNames)
 
-main()
+""" If the file adt_filename already exists, the new one is created based on it """
+try:
+    with open(FilesNames.adt_filename, "r") as ADTFile:
+        ADTFromExistentFile(FilesNames, ADTFile, comment_off)
+except:
+    writeNewADT(FilesNames, comment_off)
