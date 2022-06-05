@@ -25,7 +25,7 @@ def adaptLine(line):
         struct_name = line[line.index("struct") + 1]
 
         line = "typedef struct " + struct_name + " " + struct_name.capitalize() + ";\n"
-    else:
+    else: 
         line = line.replace('{',';')
 
     return line
@@ -70,9 +70,16 @@ def writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments = {}, 
 
                 line = adaptLine(line)
 
+                if "struct" not in line and "typedef" not in line:
+                    name_function = line.split(" ")
+                    name_function = name_function[1].split('(',1)
+                    name_function = name_function[0]
+                else:
+                    name_function = line
+
                 #If line already existed in a previous file, it's original comment is kept in the new one
-                if line in dict_functions_comments:
-                    str_comment_section = "\n" + dict_functions_comments[line]
+                if name_function in dict_functions_comments:
+                    str_comment_section = "\n" + dict_functions_comments[name_function]
                 else:
                     str_comment_section = default_comment 
 
@@ -137,8 +144,13 @@ def ADTFromExistentFile(FilesNames, ADTFile, comment_off):
             typedef_list.append(line)
             comment = ""
 
-        else:
-            dict_functions_comments[line] = comment
+        else: 
+            if line[0] != '\n' and '#' not in line and "struct" not in line and "typedef" not in line:
+                name = line.split(" ")
+                name = name[1].split("(",1)
+                dict_functions_comments[name[0]] = comment
+            else:
+                dict_functions_comments[line] = comment
             comment = ""
 
     """ Then, the previous file is overwritten by the new version, keeping the original comments """
