@@ -1,5 +1,6 @@
 # AutoTAD
-Automatic ADT files creator. It creates a _header_ file after a given _filename.c_, naming it after its original name, as _filename.h_. In case a _filename.h_ already exists, autotad will scan it and keep the written comments in the new version.
+Automatic header files creator. It creates a _header_ file after a given _filename.c_, naming it after its original name, as _filename.h_. In case a _filename.h_ already exists, autotad will scan it and keep the written comments in the new version.
+
 * **What will be written in _filename.h_?**
   * _functions_ and _structs_ written in _filename.c_. If a function is written in _filename.h_ but it is removed from _filename.c_, it will not be kept on further executions.
   * _typedefs_ written in _filename.h_ will be kept upon further executions.
@@ -13,13 +14,22 @@ Automatic ADT files creator. It creates a _header_ file after a given _filename.
     
     #endif
     ```
+    
+* **What arguments can be passed?**
+  - *filename.c*: autotad creates header based on filename.c (".c" is not necessary. However, if it's written "_filename._", ending with '_._', autotad will not recognise the file).
+  - *comment-off*: autotad does not create new automatic comment sections for new functions or structs.
 
-## Arguments:
+  If _filename_ is passed as a parameter, autotad will search for a _filename.h_ file in the current directory. Otherwise, the function name will be asked via _standard input_, then it will search for it. It can process multiples files given via _argv_. The arguments' order does not matter.
 
-  - *filename.c*: autotad creates header based on filename.c (".c" is not necessary)
-  - *comment-off*: autotad does not create new automatic comment sections for functions
+* **Any tips?**
+  - There is a section for tips and warnings later in this README.
 
-If _filename_ is passed as a parameter, autotad will search for a _filename.h_ file in the current directory. Otherwise, the function name will be asked via _stdin_, then search for it. It can process multiples files given via _argv_. The arguments' order does not matter.
+* **Example of execution?**
+  - Pretty simple and straightforward:
+  ```
+  python autotad.py function1.c function2 comment-off
+  ```
+  - There are more detailed execution examples in the last section.
 
 ------------------------
 
@@ -48,7 +58,7 @@ void function1(int i, char *c);
 */
 int function2();
 ```
-_Note: How autotad deals with comments is specified later._
+_Note: How autotad deals with comments is detailed later._
 
 ### Structs
 When a struct is read in _filename.c_, it will be defined as a type in _filename.h_. Structs are always written in *filename.h* like their names in *filename.c* with its first letter capitalized. For example, if we have, in _filename.c_:
@@ -67,21 +77,21 @@ typedef struct str_example Str_example;
 ```
 
 ### Typedefs
-Typedefs other than those defined by the structs written directly in _filename.h_ are also kept on further executions, along their comments. However, autotad will **not** write in _filename.h_ a typedef defined in _filename.c_.
+Typedefs written directly in _filename.h_ (other than those defined by structs) are also kept on further executions, along their comments. However, autotad will **not** write in _filename.h_ a typedef defined in _filename.c_.
 ```
-// This will be kept upon further executions
+// This is in filename.h and it WILL be kept upon further executions
 typedef int elem;
 ```
 They are always written on the top of _filename.h_, before structs and functions.
 
-### Private functions
-Writing *AUTOTAD_PRIVATE* in a comment in *filename.c* makes autotad ignore the next function. For example, in _filename.c_:
+### Private structures
+Writing *AUTOTAD_PRIVATE* in a comment in *filename.c* makes autotad ignore the next function or structure. For example, in _filename.c_:
 ```
 /* AUTOTAD_PRIVATE */
-void function1(int i, char *c){
-  ...
-  return;
-}
+struct str_example{
+  int i;
+  float f;
+};
 
 //AUTOTAD_PRIVATE
 void function2(){
@@ -94,7 +104,7 @@ void function3(){
   return;
 }
 ```
-Only function3 will be written in _filename.h_.
+Only function3 will be written in _filename.h_. Writing it inside a _function_ or _struct_ will have no effect.
 
 ### Comments
 If _filename.h_ doesn't exist, a new file will be created. Otherwise, autotad will scan the whole file and store all comments with their respective _functions_, _structs_ or _typedefs_ as keys in a dictionary. These comments will be rewritten in the new _filename.h_ along their respective key.
@@ -132,9 +142,35 @@ void function2(int i);
 **An important detail about how the keys are used in the dictionaries:**
 * Structs and other typedefs are stored in the dictionary using their whole line as a key. As for functions, **only their names are used as keys**. That means we can modify the parameters or the return type in _filename.c_, but, **as long as we do not change the function name, its previous comment will be kept on further executions**.
 
-### Tips and observations
-* As for now, the funcionality of AUTOTAD_PRIVATE is not working perfectly, and might generate undesirable text in the output file, so its use is not recommended. I will try to fix it later.
-* To avoid the repetitive and boring commands, it is largely recommended to use this script in a Makefile before compiling all files. A simple Makefile would do:
+------------------------
+
+### Tips and warnings
+* **Avoid using both curly braces in a single line**. Curly braces are used for scope control, and I generally assume every function, loop or any other structure with its own scope to use at least two different lines, so writing them in a single line might result in unexpected output. For example, instead of writing:
+ ```
+  while(condition){ }
+ ```
+   Write it like this:
+ ```
+  while(condition){ 
+  }
+ ```
+   However, using a single line _if_ without curly braces, for example, like in ```if (condition) break;``` will not cause any possible bug.
+* **Be careful changing functions' names**. As stated before, you can change their return type or their parameters, but changing their name will make autotad indentify them as a new function. That said, for functions returning pointers, **avoid writing ' * ' along the function's name**, or autotad will indentify it as part of the function's name. For example, instead of writing:
+```
+ char *a_string_function(){
+  ...
+  return string;
+ }
+```
+   Write it like this:
+```
+ char* a_string_function(){
+  ...
+  return string;
+ }
+```
+   So there will be no possible mistake identifying what is the function's name and what is the return type.
+* **Use a Makefile**. To avoid repetitive and boring commands, it is largely recommended to use this script in a Makefile before compiling all files. A simple Makefile would do:
 ```
   c:
     python autotad filename.c
