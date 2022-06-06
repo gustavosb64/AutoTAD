@@ -154,13 +154,15 @@ def ADTFromExistentFile(FilesNames, ADTFile, comment_off):
             comment = ""
 
     """ Then, the previous file is overwritten by the new version, keeping the original comments """
+    print(typedef_list)
     writeNewADT(FilesNames, comment_off, dict_functions_comments, typedef_list)
 
     return
 
 
-FilesNames = ClassFileNames()
+FilesList = []
 comment_off = False
+FilesNames = ClassFileNames()
 
 """ Checks input from sys.argv """
 for i in range(1, len(sys.argv)):
@@ -170,19 +172,22 @@ for i in range(1, len(sys.argv)):
 
     elif FilesNames.dotc_filename == "": 
         FilesNames.dotc_filename = sys.argv[i]
+        FilesList.append(FilesNames)
+        FilesNames = ClassFileNames()
 
     else:
         raise Exception(sys.argv[i] + " is not a valid command. Given filename: " + FilesNames.dotc_filename)
 
-""" If dotc_filename is not given via sys.argv, asks for input from stdin """
-if FilesNames.dotc_filename == "":
-    FilesNames.dotc_filename = str(input())
+for FilesNames in FilesList:
+    """ If dotc_filename is not given via sys.argv, asks for input from stdin """
+    if FilesNames.dotc_filename == "":
+        FilesNames.dotc_filename = str(input())
 
-FilesNames = getFilesNames(FilesNames)
+    FilesNames = getFilesNames(FilesNames)
 
-""" If the file adt_filename already exists, the new one is created based on it """
-try:
-    with open(FilesNames.adt_filename, "r") as ADTFile:
-        ADTFromExistentFile(FilesNames, ADTFile, comment_off)
-except:
-    writeNewADT(FilesNames, comment_off)
+    """ If the file adt_filename already exists, the new one is created based on it """
+    try:
+        with open(FilesNames.adt_filename, "r") as ADTFile:
+            ADTFromExistentFile(FilesNames, ADTFile, comment_off)
+    except:
+        writeNewADT(FilesNames, comment_off)
