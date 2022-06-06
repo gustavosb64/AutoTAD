@@ -19,7 +19,7 @@ Automatic ADT files creator. It creates a _header_ file after a given _filename.
   - *filename.c*: autotad creates header based on filename.c (".c" is not necessary)
   - *comment-off*: autotad does not create new automatic comment sections for functions
 
-If _filename_ is passed as a parameter, autotad will search for a _filename.h_ file in the current directory. Otherwise, the function name will be asked via _stdin_, then search for it.
+If _filename_ is passed as a parameter, autotad will search for a _filename.h_ file in the current directory. Otherwise, the function name will be asked via _stdin_, then search for it. It can process multiples files given via _argv_. The arguments' order does not matter.
 
 ------------------------
 
@@ -264,3 +264,8 @@ float function3(float f);
     
 #endif
 ```
+In the same fashion, multiple files can be given via _argv_: 
+
+```python autotad filename1.c filename2.c filename3.c comment-off```
+
+It will process each file, creating their respective header file. ```comment-off``` will be applied to all three files.
