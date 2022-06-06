@@ -86,10 +86,14 @@ def writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments = {}, 
                 ADTFile.write(str_comment_section)
                 ADTFile.write(line)
 
-            curly_braces_control += 1
+            if curly_braces_control >= 0: curly_braces_control += 1
+            else: curly_braces_control -= 1
 
         if '}' in line:
-            curly_braces_control -= 1 if curly_braces_control > 0 else 0
+            if curly_braces_control >= 0: curly_braces_control -= 1
+            elif curly_braces_control < 0: curly_braces_control += 1
+            if curly_braces_control == -1: curly_braces_control = 0
+
 
     return
 
@@ -154,7 +158,6 @@ def ADTFromExistentFile(FilesNames, ADTFile, comment_off):
             comment = ""
 
     """ Then, the previous file is overwritten by the new version, keeping the original comments """
-    print(typedef_list)
     writeNewADT(FilesNames, comment_off, dict_functions_comments, typedef_list)
 
     return
