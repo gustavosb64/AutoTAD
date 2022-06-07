@@ -43,12 +43,15 @@ def writeHeader(FilesNames, ADTFile):
     return
 
 """ Writes the contents in file """
-def writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments = {}, typedef_list = []):
+def writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments = {}, typedef_list = [], include_list = []):
 
     if comment_off == True:
         default_comment = "\n"
     else:
         default_comment = "\n/*\n * Comment section\n*/\n"
+
+    for line in include_list:
+        ADTFile.write(line)
 
     for line in typedef_list:
         ADTFile.write("\n" + dict_functions_comments[line])
@@ -105,14 +108,14 @@ def writeFooter(ADTFile):
     return
 
 """ Writes new ADT file from scratch """ 
-def writeNewADT(FilesNames, comment_off, dict_functions_comments = {}, typedef_list = []):
+def writeNewADT(FilesNames, comment_off, dict_functions_comments = {}, typedef_list = [], include_list = []):
 
     """ Opening files """
     DotcFile = open (FilesNames.dotc_filename, "r")
     ADTFile = open (FilesNames.adt_filename, "w")  
 
     writeHeader(FilesNames, ADTFile)
-    writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments, typedef_list)
+    writeContents(DotcFile, ADTFile, comment_off, dict_functions_comments, typedef_list, include_list)
     writeFooter(ADTFile)
 
     DotcFile.close()
@@ -127,6 +130,7 @@ def ADTFromExistentFile(FilesNames, ADTFile, comment_off):
     adt_contents = ADTFile.readlines()
     dict_functions_comments = {}
     typedef_list = []
+    include_list = []
 
     comment = ""
     comment_scope = False 
@@ -148,6 +152,9 @@ def ADTFromExistentFile(FilesNames, ADTFile, comment_off):
             typedef_list.append(line)
             comment = ""
 
+        elif comment_scope == False and "#include" in line:
+            include_list.append(line)
+
         else: 
             if line[0] != '\n' and '#' not in line and "struct" not in line and "typedef" not in line:
                 name = line.split(" ")
@@ -158,7 +165,7 @@ def ADTFromExistentFile(FilesNames, ADTFile, comment_off):
             comment = ""
 
     """ Then, the previous file is overwritten by the new version, keeping the original comments """
-    writeNewADT(FilesNames, comment_off, dict_functions_comments, typedef_list)
+    writeNewADT(FilesNames, comment_off, dict_functions_comments, typedef_list, include_list)
 
     return
 
