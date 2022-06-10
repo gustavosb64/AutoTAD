@@ -3,7 +3,7 @@ Automatic header files creator. It creates a _header_ file after a given _filena
 
 * **What will be written in _filename.h_?**
   * _functions_ and _structs_ written in _filename.c_. If a function is written in _filename.h_ but it is removed from _filename.c_, it will not be kept on further executions.
-  * _typedefs_ written in _filename.h_ will be kept upon further executions.
+  * _typedefs_ and _includes_ written in _filename.h_ will be kept upon further executions.
   * Comments written right above _functions_, _structs_ and _typedefs_ in _filename.h_ will be kept upon further executions.
   * Every file will be written following the template below (for a file named _filename.h_):
     ```
@@ -76,13 +76,13 @@ This will be written in _filename.h_:
 typedef struct str_example Str_example;
 ```
 
-### Typedefs
-Typedefs written directly in _filename.h_ (other than those defined by structs) are also kept on further executions, along their comments. However, autotad will **not** write in _filename.h_ a typedef defined in _filename.c_.
+### Typedefs and includes
+Typedefs written directly in _filename.h_ (other than those defined by structs) are also kept on further executions, along their comments. However, autotad will **not** write in _filename.h_ a typedef defined in _filename.c_. The same applies to _includes_ written in _filename.h_
 ```
 // This is in filename.h and it WILL be kept upon further executions
 typedef int elem;
 ```
-They are always written on the top of _filename.h_, before structs and functions.
+They are always written on the top of _filename.h_, before structs and functions. _Includes_ are written before typedefs.
 
 ### Private structures
 Writing *AUTOTAD_PRIVATE* in a comment in *filename.c* makes autotad ignore the next function or structure. For example, in _filename.c_:
