@@ -1,4 +1,3 @@
-
 function check_filename_c(filename)
 
     new_name_c = filename
@@ -11,16 +10,6 @@ end
 
 function get_filename_h(filename)
     return filename:gsub("%.c", ".h")
-end
-
-function split_string(string, delimiter)
-
-    splitted_string = {}
-    for s in string:gmatch(delimiter) do
-        table.insert(splitted_string, s)
-    end
-
-    return splitted_string
 end
 
 function adapt_line(string)
@@ -47,7 +36,6 @@ function write_header(filename_h, file_h_w)
 
     file_h_w:write(str_header)
 
-    return
 end
 
 function write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments, typedef_list, include_list)
@@ -59,12 +47,12 @@ function write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments
     end
 
     for k, line in pairs(include_list or {}) do
-        file_h_w.write(line)
+        file_h_w:write(line.."\n")
     end
 
     for k, line in pairs(typedef_list or {}) do
-        file_h_w.write("\n" + dict_functions_comments[line])
-        file_h_w.write(line)
+        file_h_w:write("\n"..dict_functions_comments[line])
+        file_h_w:write(line.."\n")
     end
 
     -- curly_braces_control makes the scope control to identify functions
@@ -73,27 +61,35 @@ function write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments
     i = 0
     line = file_c_r:read("*line")
     while line do
-        -- implement AUTOTAD_PRIVATE 
 
-        if line:find("{") then
+        --If "AUTOTAD_PRIVATE" is in line, curly_braces_control is changed so the next function will be ignored by the script
+        if (line:find("AUTOTAD_PRIVATE") and curly_braces_control == 0) then
+            curly_braces_control = -1
+
+        elseif line:find("{") then
 
             if curly_braces_control == 0 then
                 line = adapt_line(line)
 
-                -- implement function name as key
-
-                key = line
+                -- Getting function name as key
+                if not line:find("struct") and not line:find("typedef") then
+                    key_start = line:find(" ") + 1
+                    key_end = line:find("%(") - 1
+                    key = line:sub(key_start, key_end)
+                else
+                    key = line
+                end
 
                 --If line already existed in a previous file, it's original comment is kept in the new one
                 str_comment_section = default_comment
                 pcall( function()
-                        if dict_functions_comments[key] then
-                            str_comment_section = "\n"..dict_functions_comments[key]
-                        end
-                    end)
+                            if dict_functions_comments[key] then
+                                str_comment_section = "\n"..dict_functions_comments[key]
+                            end
+                        end )
 
                     file_h_w:write(str_comment_section)
-                    file_h_w:write(key)
+                    file_h_w:write(line)
 
                 end
                 
@@ -124,20 +120,9 @@ end
 
 function write_footer(file_h_w)
     file_h_w:write("\n\n#endif")
-    return
 end
 
 function write_new_hfile(filename_c, filename_h, comment_off, dict_functions_comments, typedef_list, include_list)
-    print("hoy")
-    print(filename_c)
-    --[[
-    print(filename_c) 
-    print(filename_h) 
-    print(comment_off) 
-    print(dict_functions_comments) 
-    print(typedef_list) 
-    print(include_list) 
-    ]]--
 
     -- Opening base file and checking whether it exists
     local file_c_r = io.open(filename_c, "r")
@@ -146,20 +131,65 @@ function write_new_hfile(filename_c, filename_h, comment_off, dict_functions_com
     local file_h_w = io.open(filename_h, "w")
 
     write_header(filename_h, file_h_w)
-    write_contents(file_c_r, file_h_w, comment_off)
+    write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments, typedef_list, include_list)
     write_footer(file_h_w)
 
     file_c_r:close()
     file_h_w:close()
 
     return 0
-
 end
 
-function hfile_from_existing_cfile(filename, file_h_r, comment_off)
-    print("hey")
-end
+function hfile_from_existing_cfile(filename_c, filename_h, file_h_r, comment_off)
 
+    dict_functions_comments = {}
+    typedef_list = {}
+    include_list = {}
+
+    comment = ""
+    comment_scope = false
+
+    line = file_h_r:read("*line")
+    while (line) do
+
+        if (line:find("/%*") and not line:find("%*/") and comment_scope == false) then
+            comment_scope = true
+            comment = comment..line.."\n"
+
+        elseif (line:find("%*/") or (line:find("//") and comment_scope == false)) then
+            comment = comment..line.."\n"
+            comment_scope = false
+        
+        elseif (comment_scope == true) then
+            comment = comment..line.."\n"
+
+        elseif (comment_scope == false and line:find("typedef") and not line:find("struct")) then
+            dict_functions_comments[line] = comment
+            table.insert(typedef_list, line)
+            comment = ""
+
+        elseif (comment_scope == false and line:find("#include") ) then
+            table.insert(include_list, line)
+
+        else
+            -- Compares whether first character is '\n'
+            if line:find("%w") and string.char(line:byte()) ~= "#" and not line:find("struct") and not line:find("typedef") then
+                f_name_start = line:find(" ") + 1
+                f_name_end = line:find("%(") - 1
+                f_name = line:sub(f_name_start, f_name_end)
+                dict_functions_comments[f_name] = comment
+            else
+                dict_functions_comments[line] = comment
+            end
+            comment = ""
+        end
+
+        line = file_h_r:read("*line")
+    end
+
+    write_new_hfile(filename_c, filename_h, comment_off, dict_functions_comments, typedef_list, include_list)
+
+end
 
 list_of_filenames = { c = {}, h = {} }
 
@@ -176,7 +206,10 @@ for i=1, #arg, 1 do
 
 end
 
-print(table.concat(list_of_filenames.c, ", "))
+if #list_of_filenames.c == 0 then 
+    inp = io.read("*l")
+    table.insert(list_of_filenames.c, inp)
+end
 
 -- Adapt files names
 for k, v in pairs(list_of_filenames.c) do
@@ -187,20 +220,14 @@ end
 -- Execute program for each file given as an argument
 for i=1, #list_of_filenames.c, 1 do
 
-    print(list_of_filenames.c[i], list_of_filenames.h[i])
-
     local file_h_r = io.open(list_of_filenames.h[i],"r")
 
-    print("----------------")
-    if file_h_r ~= nil then
-        --hfile_from_existing_cfile(list_of_filenames.h[i], file_h_r, comment_off)
-        write_new_hfile(list_of_filenames.c[i], list_of_filenames.h[i], comment_off)
+    if file_h_r then
+        hfile_from_existing_cfile(list_of_filenames.c[i], list_of_filenames.h[i], file_h_r, comment_off)
     else
-
         if write_new_hfile(list_of_filenames.c[i], list_of_filenames.h[i], comment_off) ~= 0 then
-            print("An error ocurred")
+            print("ERROR! File "..list_of_filenames.c[i].." not found.")
         end
-            
     end
 
 end
