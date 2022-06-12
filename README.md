@@ -4,7 +4,7 @@ Automatic header files creator. It creates a _header_ file after a given _filena
 * **What will be written in _filename.h_?**
   * _functions_ and _structs_ written in _filename.c_. If a function is written in _filename.h_ but it is removed from _filename.c_, it will not be kept on further executions.
   * _typedefs_ and _includes_ written in _filename.h_ will be kept upon further executions.
-  * Comments written above _functions_, _structs_ and _typedefs_ in _filename.h_ will be kept upon further executions.
+  * Comments written right above _functions_, _structs_ and _typedefs_ in _filename.h_ will be kept upon further executions.
   * Every file will be written following the template below (for a file named _filename.h_):
     ```
     #ifndef FILENAME_H
@@ -25,9 +25,12 @@ Automatic header files creator. It creates a _header_ file after a given _filena
   - There is a section for tips and warnings later in this README.
 
 * **Example of execution?**
-  - Pretty simple and straightforward:
+  - Pretty simple and straightforward. It can be executed both through the executable file or directly by the Lua script:
   ```
-  python autotad.py function1.c function2 comment-off
+  ./autotad function1.c function2 comment-off
+  ```
+  ```
+  lua autotad.lua function1.c function2 comment-off
   ```
   - There are more detailed execution examples in the last section.
 
@@ -120,13 +123,22 @@ void function(int i, char *c);
 ```
 This can be disabled by using _comment-off_ as an argument via _argv_ when executing the script. Notice that, once the file is written, the comment section will later be identified as _function_'s comment, so it will be copied on further executions even when using _comment-off_.
 
-The comments right above the functions, structs or typedefs will be kept after executing autotad over an existing _filename.h_ file, as shown below.
+Only the comment section right above the functions, structs or typedefs will be kept after executing autotad over an existing _filename.h_ file, as shown below.
 ```
+// This comment 
+// WILL NOT
+// be kept in the new file
+
 /*
  * This comment WILL
  * be kept in the new file
 */
 void function1(int i);
+
+/* This comment 
+ * WILL NOT
+ * be kept in the new file
+*/
 
 // This comment WILL
 // be kept in the new file
@@ -166,7 +178,7 @@ void function2(int i);
 * **Use a Makefile**. To avoid repetitive and boring commands, it is largely recommended to use this script in a Makefile before compiling all files. A simple Makefile would do:
 ```
   c:
-    python autotad filename.c
+    ./autotad filename.c
     gcc -o main main.c filename.c
 ```
 So when ```make c``` is called, autotad will be executed.
@@ -198,7 +210,7 @@ int function3(float f){
   return 1;
 }
 ```
-After executing ```python autotad filename.c```, this will be the output in _filename.h_:
+After executing ```./autotad filename.c```, this will be the output in _filename.h_:
 ```
 #ifndef FILENAME_H
 #define FILENAME_H
@@ -269,7 +281,7 @@ int function3(float f){
   return 1;
 }
 ```
-After executing ```python autotad filename.c comment-off```, the new _filename.h_ will be:
+After executing ```./autotad filename.c comment-off```, the new _filename.h_ will be:
 
 ```
 #ifndef FILENAME_H
@@ -295,6 +307,6 @@ float function3(float f);
 ```
 In the same fashion, multiple files can be given via _argv_: 
 
-```python autotad filename1.c filename2.c filename3.c comment-off```
+```./autotad filename1.c filename2.c filename3.c comment-off```
 
 It will process each file, creating their respective header file. ```comment-off``` will be applied to all three files.
