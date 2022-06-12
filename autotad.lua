@@ -3,7 +3,7 @@ function check_filename_c(filename)
 
     new_name_c = filename
     if not filename:find("%.c") then
-       new_name_c = filename .. ".c" 
+       new_name_c = filename..".c" 
     end
     return new_name_c
 
@@ -66,7 +66,7 @@ function write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments
     line = file_c_r:read("*line")
     while line do
 
-        --If "AUTOTAD_PRIVATE" is in line, curly_braces_control is changed so the next function will be ignored by the script
+        -- If "AUTOTAD_PRIVATE" is in line, curly_braces_control is changed so the next function will be ignored by the script
         if (line:find("AUTOTAD_PRIVATE") and curly_braces_control == 0) then
             curly_braces_control = -1
 
@@ -84,7 +84,7 @@ function write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments
                     key = line:match("[^\n]*")
                 end
 
-                --If line already existed in a previous file, it's original comment is kept in the new one
+                -- If line already existed in a previous file, it's original comment is kept in the new one
                 str_comment_section = default_comment
                 pcall( function()
                             if dict_functions_comments[key] then
