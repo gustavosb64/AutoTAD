@@ -1,3 +1,4 @@
+-- Get the c file name. Adds '.c' when necessary
 function check_filename_c(filename)
 
     new_name_c = filename
@@ -8,14 +9,15 @@ function check_filename_c(filename)
 
 end
 
+-- Returns the header file name
 function get_filename_h(filename)
     return filename:gsub("%.c", ".h")
 end
 
+-- Adapt line to be written in the header file
 function adapt_line(string)
     
-    new_string = string
-
+    -- Structs are defined by typedef and named by their original name capitalized
     idx_s, idx_e = string:find("struct")
     if idx_s ~= nil then
         new_string = string:sub(idx_e+2, #string-1)
@@ -27,9 +29,10 @@ function adapt_line(string)
     return new_string
 end
 
+-- Writes header in the header file
 function write_header(filename_h, file_h_w)
 
-    -- prepares ADTFile name for writing
+    -- Prepares ADTFile name for writing
     header_filename = string.upper(filename_h):gsub('%.','_')
 
     str_header = "#ifndef "..header_filename.."\n#define "..header_filename.."\n\n"
@@ -38,6 +41,7 @@ function write_header(filename_h, file_h_w)
 
 end
 
+-- Writes the contents in the header file
 function write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments, typedef_list, include_list)
     
     if comment_off == true then
@@ -93,6 +97,7 @@ function write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments
 
                 end
                 
+                -- If AUTOTAD_PRIVATE is active, curly_braces_control is decremented
                 if curly_braces_control >= 0 then 
                     curly_braces_control = curly_braces_control + 1
                 else
@@ -108,6 +113,7 @@ function write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments
                 curly_braces_control = curly_braces_control + 1
             end
             
+            -- If curly_braces_control == -1 after finding '}', AUTOTAD_PRIVATE is scope is over
             if curly_braces_control == -1 then curly_braces_control = 0 end
 
         end
@@ -118,10 +124,12 @@ function write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments
 
 end
 
+-- Writes footer in the header file
 function write_footer(file_h_w)
     file_h_w:write("\n\n#endif")
 end
 
+-- Writes header file from scratch
 function write_new_hfile(filename_c, filename_h, comment_off, dict_functions_comments, typedef_list, include_list)
 
     -- Opening base file and checking whether it exists
@@ -140,8 +148,10 @@ function write_new_hfile(filename_c, filename_h, comment_off, dict_functions_com
     return 0
 end
 
+-- Writes header file from existent file
 function hfile_from_existing_cfile(filename_c, filename_h, file_h_r, comment_off)
 
+    -- First, the existent .h file is read and the functions' comments are stored in a dictionary
     dict_functions_comments = {}
     typedef_list = {}
     include_list = {}
@@ -181,7 +191,6 @@ function hfile_from_existing_cfile(filename_c, filename_h, file_h_r, comment_off
 
                 dict_functions_comments[f_name] = comment
             else
-                print(line, comment)
                 dict_functions_comments[line] = comment
             end
             comment = ""
@@ -190,15 +199,15 @@ function hfile_from_existing_cfile(filename_c, filename_h, file_h_r, comment_off
         line = file_h_r:read("*line")
     end
 
+    -- Then, the previous file is overwritten by the new version, keeping the original comments
     write_new_hfile(filename_c, filename_h, comment_off, dict_functions_comments, typedef_list, include_list)
 
 end
 
 list_of_filenames = { c = {}, h = {} }
-
 comment_off = false
 
--- Check input from argv 
+-- Checks input from argv 
 for i=1, #arg, 1 do
 
     if (arg[i] == "comment-off") then
@@ -209,6 +218,7 @@ for i=1, #arg, 1 do
 
 end
 
+-- If no filename is given via argv, asks as input
 if #list_of_filenames.c == 0 then 
     inp = io.read("*l")
     table.insert(list_of_filenames.c, inp)
@@ -225,8 +235,10 @@ for i=1, #list_of_filenames.c, 1 do
 
     local file_h_r = io.open(list_of_filenames.h[i],"r")
 
+    -- If the header file already exists, the new one is created based on it
     if file_h_r then
         hfile_from_existing_cfile(list_of_filenames.c[i], list_of_filenames.h[i], file_h_r, comment_off)
+        file_h_r:close()
     else
         if write_new_hfile(list_of_filenames.c[i], list_of_filenames.h[i], comment_off) ~= 0 then
             print("ERROR! File "..list_of_filenames.c[i].." not found.")
