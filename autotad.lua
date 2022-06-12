@@ -75,7 +75,7 @@ function write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments
                 if not line:find("struct") and not line:find("typedef") then
                     key_start = line:find(" ") + 1
                     key_end = line:find("%(") - 1
-                    key = line:sub(key_start, key_end)
+                    key = string.match(line:sub(key_start, key_end), "%w*")
                 else
                     key = line
                 end
@@ -176,7 +176,9 @@ function hfile_from_existing_cfile(filename_c, filename_h, file_h_r, comment_off
             if line:find("%w") and string.char(line:byte()) ~= "#" and not line:find("struct") and not line:find("typedef") then
                 f_name_start = line:find(" ") + 1
                 f_name_end = line:find("%(") - 1
-                f_name = line:sub(f_name_start, f_name_end)
+                -- string.match is used to strip string in case there is blank spaces at the end
+                f_name = string.match(line:sub(f_name_start, f_name_end), "%w*")
+
                 dict_functions_comments[f_name] = comment
             else
                 dict_functions_comments[line] = comment
