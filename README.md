@@ -219,7 +219,7 @@ After executing ```./autotad filename.c```, this will be the output in _filename
 /*
  * Comment section
 */
-typedef struct str_example Str_example;
+typedef struct exStr ExStr;
 
 /*
  * Comment section
@@ -245,7 +245,7 @@ Changing _filename.h_ (editing comments and adding a new typedef):
  * This struct
  * is here as an example
 */
-typedef struct str_example Str_example;
+typedef struct exStr ExStr;
 
 // this is the glorious function1
 void function1(int i);
@@ -295,7 +295,7 @@ typedef int elem;
  * This struct
  * is here as an example
 */
-typedef struct str_example Str_example;
+typedef struct exStr ExStr;
 
 void function4(int i);
 
