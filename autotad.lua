@@ -20,7 +20,8 @@ function adapt_line(string)
     -- Structs are defined by typedef and named by their original name capitalized
     idx_s, idx_e = string:find("struct")
     if idx_s ~= nil then
-        new_string = string:sub(idx_e+2, #string-1)
+        new_string = string.match(string:sub(idx_e+2, #string-1), "%g*")
+        --new_string = string:sub(idx_e+2, #string-1)
         new_string = "typedef struct "..new_string.." "..new_string:gsub("^%l", string.upper)..";\n"
     else
         new_string = string:gsub("{", ";\n")
