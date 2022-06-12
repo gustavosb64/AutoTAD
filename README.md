@@ -122,8 +122,6 @@ This can be disabled by using _comment-off_ as an argument via _argv_ when execu
 
 Only the comment section right above the functions, structs or typedefs will be kept after executing autotad over an existing _filename.h_ file, as shown below.
 ```
-// this commment will NOT be 
-// kept in the new file
 
 /*
  * This comment WILL
@@ -131,10 +129,6 @@ Only the comment section right above the functions, structs or typedefs will be 
 */
 void function1(int i);
 
-/* this comment
- * will NOT BE kept
- * in the new file */
- 
 // This comment WILL
 // be kept in the new file
 void function2(int i);
