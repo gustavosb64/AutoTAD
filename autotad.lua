@@ -77,7 +77,7 @@ function write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments
                     key_end = line:find("%(") - 1
                     key = string.match(line:sub(key_start, key_end), "%g*")
                 else
-                    key = line
+                    key = line:match("[^\n]*")
                 end
 
                 --If line already existed in a previous file, it's original comment is kept in the new one
@@ -181,6 +181,7 @@ function hfile_from_existing_cfile(filename_c, filename_h, file_h_r, comment_off
 
                 dict_functions_comments[f_name] = comment
             else
+                print(line, comment)
                 dict_functions_comments[line] = comment
             end
             comment = ""
