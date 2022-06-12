@@ -150,6 +150,22 @@ void function2(int i);
 ------------------------
 
 ### Tips and warnings
+* **Avoid declaring functions and structs with a curly brace below the function's name.** I generally assume every function, loop or any other structure will be declared with the first curly brace in line. For example, instead of writing:
+ ```
+    void function()
+    {
+      ...
+      return;
+    }
+ ```
+   Write it like this:
+ ```
+    void function(){
+      ...
+      return;
+    }
+ ```
+    Writing them differently will result in wrong output.
 * **Avoid using both curly braces in a single line**. Curly braces are used for scope control, and I generally assume every function, loop or any other structure with its own scope to use at least two different lines, so writing them in a single line might result in unexpected output. For example, instead of writing:
  ```
   while(condition){ }
