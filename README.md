@@ -4,7 +4,7 @@ Automatic header files creator. It creates a _header_ file after a given _filena
 * **What will be written in _filename.h_?**
   * _functions_ and _structs_ written in _filename.c_. If a function is written in _filename.h_ but it is removed from _filename.c_, it will not be kept on further executions.
   * _typedefs_ and _includes_ written in _filename.h_ will be kept upon further executions.
-  * Comments written right above _functions_, _structs_ and _typedefs_ in _filename.h_ will be kept upon further executions.
+  * Comments written above _functions_, _structs_ and _typedefs_ in _filename.h_ will be kept upon further executions.
   * Every file will be written following the template below (for a file named _filename.h_):
     ```
     #ifndef FILENAME_H
@@ -120,21 +120,14 @@ void function(int i, char *c);
 ```
 This can be disabled by using _comment-off_ as an argument via _argv_ when executing the script. Notice that, once the file is written, the comment section will later be identified as _function_'s comment, so it will be copied on further executions even when using _comment-off_.
 
-Only the comment section right above the functions, structs or typedefs will be kept after executing autotad over an existing _filename.h_ file, as shown below.
+The comments right above the functions, structs or typedefs will be kept after executing autotad over an existing _filename.h_ file, as shown below.
 ```
-// this commment will NOT be 
-// kept in the new file
-
 /*
  * This comment WILL
  * be kept in the new file
 */
 void function1(int i);
 
-/* this comment
- * will NOT BE kept
- * in the new file */
- 
 // This comment WILL
 // be kept in the new file
 void function2(int i);
