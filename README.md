@@ -17,7 +17,7 @@ Automatic header files creator. It creates a _header_ file after a given _filena
     
 * **What arguments can be passed?**
   - *filename.c*: autotad creates header based on filename.c (".c" is not necessary. However, if it's written "_filename._", ending with '_._', autotad will not recognise the file).
-  - *comment-off*: autotad does not create new automatic comment sections for new functions or structs.
+  - *comment-off*: when this argument is present, autotad will not create new automatic comment sections for new functions or structs.
 
   If _filename_ is passed as a parameter, autotad will search for a _filename.h_ file in the current directory. Otherwise, the function name will be asked via _standard input_, then it will search for it. It can process multiples files given via _argv_. The arguments' order does not matter.
 
