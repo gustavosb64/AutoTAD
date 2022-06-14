@@ -22,18 +22,19 @@ function adapt_line(string, prev_string)
     if idx_s ~= nil then
         new_string = string.match(string:sub(idx_e+2, #string), "%w*")
         new_string = "typedef struct "..new_string.." "..new_string:gsub("^%l", string.upper)..";\n"
-    elseif string.char(string.byte(string, string:find("%g"))) ~= "{" then
-        new_string = string:gsub("{", ";\n")
-    else
-        -- In case the first alphanumeric character in string is "{", new_string, used
-        -- for function's name, receives the prev_string
-        idx_s, idx_e = prev_string:find("struct")
-        if prev_string:find("struct") then
-            new_string = string.match(prev_string:sub(idx_e+2, #prev_string), "%w*")
-            new_string = "typedef struct "..new_string.." "..new_string:gsub("^%l", string.upper)..";\n"
-        else new_string = prev_string..";\n"
 
+    elseif (string.char(string.byte(string, string:find("%g"))) ~= "{") then
+        new_string = string:gsub("{", ";\n")
+
+    else
+        -- In case the first alphanumeric character in string is "{", 
+        -- new_string, used for function's or struct's name, receives prev_string
+        if prev_string:find("struct") then
+            new_string = adapt_line(prev_string)
+        else 
+            new_string = prev_string..";\n"
         end
+
     end
 
     return new_string
