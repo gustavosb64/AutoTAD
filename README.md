@@ -150,32 +150,6 @@ void function2(int i);
 ------------------------
 
 ### Tips and warnings
-* **Do not declare functions and structs with a curly brace below their name.** I assume every function and struct will be declared with the first curly brace in line. For example, instead of writing:
- ```
-    void function()
-    {
-      ...
-      return;
-    }
- ```
-   Write it like this:
- ```
-    void function(){
-      ...
-      return;
-    }
- ```
-   Writing them differently will result in an error.
-* **Avoid using both curly braces in a single line**. Curly braces are used for scope control, and I generally assume every function, loop or any other structure with its own scope to use at least two different lines. Although I haven't found any error associated with this, writing them in a single line might result in unexpected output, since I don't usually declare anything in this format. So, for example, instead of writing:
- ```
-  while(condition){ }
- ```
-   Write it like this:
- ```
-  while(condition){ 
-  }
- ```
-   However, using a single line _if_ without curly braces, for example, like in ```if (condition) break;``` will not cause any possible bug.
 * **Be careful changing functions' names**. As stated before, you can change their return type or their parameters, but changing their name will make autotad indentify them as a new function. That said, for functions returning pointers, **avoid writing ' * ' along the function's name**, or autotad will indentify it as part of the function's name. For example, instead of writing:
 ```
  char *a_string_function(){

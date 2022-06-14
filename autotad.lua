@@ -15,7 +15,7 @@ function get_filename_h(filename)
 end
 
 -- Adapt line to be written in the header file
-function adapt_line(string)
+function adapt_line(string, prev_string)
     
     -- Structs are defined by typedef and named by their original name capitalized
     idx_s, idx_e = string:find("struct")
@@ -23,8 +23,12 @@ function adapt_line(string)
         new_string = string.match(string:sub(idx_e+2, #string-1), "%g*")
         --new_string = string:sub(idx_e+2, #string-1)
         new_string = "typedef struct "..new_string.." "..new_string:gsub("^%l", string.upper)..";\n"
-    else
+    elseif string.char(string.byte(string, string:find("%g"))) ~= "{" then
         new_string = string:gsub("{", ";\n")
+    else
+        -- In case the first alphanumeric character in string is "{", new_string, used
+        -- for function's name, receives the prev_string
+        new_string = prev_string..";\n"
     end
 
     return new_string
@@ -65,6 +69,7 @@ function write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments
 
     i = 0
     line = file_c_r:read("*line")
+    prev_line = line
     while line do
 
         -- If "AUTOTAD_PRIVATE" is in line, curly_braces_control is changed so the next function will be ignored by the script
@@ -74,7 +79,7 @@ function write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments
         elseif line:find("{") then
 
             if curly_braces_control == 0 then
-                line = adapt_line(line)
+                line = adapt_line(line, prev_line)
 
                 -- Getting function name as key
                 if not line:find("struct") and not line:find("typedef") then
@@ -93,8 +98,8 @@ function write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments
                             end
                         end )
 
-                    file_h_w:write(str_comment_section)
-                    file_h_w:write(line)
+                file_h_w:write(str_comment_section)
+                file_h_w:write(line)
 
                 end
                 
@@ -119,6 +124,8 @@ function write_contents(file_c_r, file_h_w, comment_off, dict_functions_comments
 
         end
 
+        -- Checks whether there is a alphanumeric character in line to store in prev_line
+        if(line:match("%w")) then prev_line = line end
         line = file_c_r:read("*line")
 
     end
